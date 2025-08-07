@@ -2,6 +2,9 @@
 import express from 'express';
 import User from '../models/user.js';
 import { createHash } from '../utils/hash.js';
+import passport from 'passport';
+import { authorizeRoles } from '../middlewares/authorizationMiddleware.js';
+
 
 const router = express.Router();
 
@@ -9,6 +12,20 @@ router.get('/', async (req, res) => {
     const users = await User.find().populate('cart');
     res.json(users);
 });
+
+router.get('/current', passport.authenticate('current', { session: false }),
+    (req, res) => {
+        authorizeRoles('JEFE')
+        const user = req.user;
+        res.json({
+            user: {
+                id: user._id,
+                email: user.email,
+                name: `${user.first_name}${user.last_name}`,
+                role: user.role
+            }
+        })
+    })
 
 
 router.get('/:id', async (req, res) => {
@@ -20,7 +37,7 @@ router.get('/:id', async (req, res) => {
 
 router.post('/register', async (req, res) => {
     try {
-        console.log('Datos recibidos:', req.body); 
+        console.log('datos recibidos:', req.body);
         const user = new User(req.body);
         await user.save();
         res.status(201).json({ message: 'Usuario registrado', user });

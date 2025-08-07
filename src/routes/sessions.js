@@ -1,14 +1,17 @@
 
 import express from 'express';
-import passport from 'passport';
+import passport, { session } from 'passport';
 import jwt from 'jsonwebtoken';
+import { authorizeRoles } from '../middlewares/authorizationMiddleware';
 
+
+
+app.use(authorizeRoles);
 const router = express.Router();
-
 
 router.post('/register', async (req, res) => {
     try {
-        console.log(req.body); 
+        console.log(req.body);
         const user = new User(req.body);
         await user.save();
         res.status(201).json({ message: 'Usuario registrado', user });
@@ -29,19 +32,32 @@ router.post('/login',
     }
 );
 
+function userDTO(user) {
+    return {
+        id: user._id,
+        email: user.email,
+        role: user.role,
+    };
+}
+
+
+router.get('/admin/dashboard',
+    passport.authenticate('jwt', { session: false }),
+    authorizeRoles(['admin']), 
+    (req, res) => {
+        res.json({ message: 'Acceso al panel de administrador' });
+    }
+);
 
 router.get('/current',
     passport.authenticate('jwt', { session: false }),
     (req, res) => {
         res.json({
-            user: {
-                id: req.user._id,
-                email: req.user.email,
-                name: `${req.user.first_name} ${req.user.last_name}`,
-                role: req.user.role
-            }
+            user: userDTO(req.user)
         });
     }
 );
+
+
 
 export default router;

@@ -1,4 +1,4 @@
-//esquuema
+
 import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema({
@@ -8,7 +8,10 @@ const userSchema = new mongoose.Schema({
     age: { type: Number, required: true },
     password: { type: String, required: true },
     cart: { type: mongoose.Schema.Types.ObjectId, ref: 'Cart' },
-    role: { type: String, default: 'user' }
+    role: { type: String, default: 'user' },
+
+    resetPasswordToken: String,
+    resetPasswordToken: Date
 });
 
 const User = mongoose.model('User', userSchema);
